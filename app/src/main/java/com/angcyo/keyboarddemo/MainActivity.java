@@ -1,5 +1,6 @@
 package com.angcyo.keyboarddemo;
 
+import android.app.Activity;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -12,6 +13,8 @@ import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -19,6 +22,45 @@ public class MainActivity extends AppCompatActivity {
     View mContentView;
 
     View mActionBar;
+    View mEmojiLayout;
+
+    int keyboardHeight = 300;
+
+    /**
+     * 屏幕高度, 包括状态栏的高度,和底部虚拟导航栏的高度
+     */
+    public static int getScreenHeight(Activity activity) {
+        Rect out = new Rect();
+        activity.getWindow().getDecorView().getHitRect(out);
+        return out.height();
+    }
+
+    /**
+     * 窗口的高度,包括状态栏的高度
+     */
+    public static int getWindowHeight(Activity activity) {
+        Rect out = new Rect();
+        activity.getWindow().findViewById(Window.ID_ANDROID_CONTENT).getHitRect(out);
+        return out.height();
+    }
+
+    /**
+     * 导航栏的高度
+     */
+    public static int getNavigationHeight(Activity activity) {
+        int screenHeight = getScreenHeight(activity);
+        int windowHeight = getWindowHeight(activity);
+        return screenHeight - windowHeight;
+    }
+
+    /**
+     * 状态栏的高度
+     */
+    public static int getStatusHeight(Activity activity) {
+        Rect out = new Rect();
+        activity.getWindow().getDecorView().getWindowVisibleDisplayFrame(out);
+        return out.top;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
 
         mContentView = findViewById(R.id.content_main);
         mActionBar = findViewById(R.id.action_bar);
+        mEmojiLayout = findViewById(R.id.emoji_layout);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -39,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
 
                 View decorView = getWindow().getDecorView();
+                View windowView = getWindow().findViewById(Window.ID_ANDROID_CONTENT);
                 logScreen();
 
                 logView(mActionBar);
@@ -48,13 +92,34 @@ public class MainActivity extends AppCompatActivity {
 
                 logHit(mContentView);
                 logHit(decorView);
+                logHit(windowView);
 
                 logVisible(mContentView);
                 logVisible(decorView);//test test
+                logVisible(windowView);//test test
+
+                logHeight();
             }
         });
 
+        mContentView.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+            @Override
+            public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
+//                keyboardHeight = getScreenHeight() -
+            }
+        });
 
+    }
+
+    public void onButton(View view) {
+        ViewGroup.LayoutParams layoutParams = mContentView.getLayoutParams();
+//        layoutParams.height =
+    }
+
+    private void logHeight() {
+        String log = String.format("屏幕高度:%s 窗口高度:%s 状态栏高度:%s 导航栏高度:%s",
+                getScreenHeight(this), getWindowHeight(this), getStatusHeight(this), getNavigationHeight(this));
+        Log.i(TAG, "logHeight: " + log );
     }
 
     private void logScreen() {
