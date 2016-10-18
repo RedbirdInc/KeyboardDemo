@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
                 logHit(decorView);
 
                 logVisible(mContentView);
-                logVisible(decorView);//test
+                logVisible(decorView);//test test
             }
         });
 
