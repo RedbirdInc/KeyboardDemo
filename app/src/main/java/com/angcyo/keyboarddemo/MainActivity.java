@@ -13,8 +13,10 @@ import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -23,8 +25,12 @@ public class MainActivity extends AppCompatActivity {
 
     View mActionBar;
     View mEmojiLayout;
+    EditText mEditText;
 
-    int keyboardHeight = 300;
+    int keyboardHeight = -1;
+    int contentHeight = -1;
+
+    boolean isShowKeyboard = false;
 
     /**
      * 屏幕高度, 包括状态栏的高度,和底部虚拟导航栏的高度
@@ -62,6 +68,11 @@ public class MainActivity extends AppCompatActivity {
         return out.top;
     }
 
+    public static void hideSoftInput(Activity activity, EditText editText) {
+        ((InputMethodManager) activity.getSystemService(INPUT_METHOD_SERVICE))
+                .hideSoftInputFromWindow(editText.getWindowToken(), 0);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,9 +83,11 @@ public class MainActivity extends AppCompatActivity {
 
         mContentView = findViewById(R.id.content_main);
         mActionBar = findViewById(R.id.action_bar);
+        mEditText = (EditText) findViewById(R.id.edit_text);
         mEmojiLayout = findViewById(R.id.emoji_layout);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+
+        final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -105,21 +118,71 @@ public class MainActivity extends AppCompatActivity {
         mContentView.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
             @Override
             public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
-//                keyboardHeight = getScreenHeight() -
+                contentHeight = bottom - top;
+                int height = getWindowHeight(MainActivity.this) - bottom;
+                if (height > 200) {
+                    isShowKeyboard = true;
+                    keyboardHeight = height;
+                } else {
+                    isShowKeyboard = false;
+                }
             }
         });
 
     }
 
+    public void hideEmoji() {
+        LinearLayout.LayoutParams mEmojiLayoutLayoutParams = (LinearLayout.LayoutParams) mEmojiLayout.getLayoutParams();
+        mEmojiLayoutLayoutParams.weight = 0;
+        mEmojiLayout.setVisibility(View.GONE);
+
+        LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) mContentView.getLayoutParams();
+        layoutParams.height = contentHeight;
+        layoutParams.weight = 1;
+
+        mContentView.requestLayout();
+    }
+
     public void onButton(View view) {
-        ViewGroup.LayoutParams layoutParams = mContentView.getLayoutParams();
-//        layoutParams.height =
+        if (isShowKeyboard) {
+            hideSoftInput(this, mEditText);
+            LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) mContentView.getLayoutParams();
+            layoutParams.height = contentHeight;
+            layoutParams.weight = 0;
+
+            LinearLayout.LayoutParams mEmojiLayoutLayoutParams = (LinearLayout.LayoutParams) mEmojiLayout.getLayoutParams();
+            mEmojiLayoutLayoutParams.weight = 1;
+            mEmojiLayout.setVisibility(View.VISIBLE);
+
+            isShowKeyboard = false;
+        } else {
+            hideEmoji();
+        }
+//        mEmojiLayoutLayoutParams.height = keyboardHeight;
+//        mEmojiLayout.setLayoutParams(mEmojiLayoutLayoutParams);
+
+
+//        layoutParams.height = getWindowHeight(this) - mContentView.getTop();
+//        final int keyboardHeight = this.keyboardHeight;
+//        delay(new Runnable() {
+//            @Override
+//            public void run() {
+//                ViewGroup.LayoutParams mEmojiLayoutLayoutParams = mEmojiLayout.getLayoutParams();
+//                mEmojiLayoutLayoutParams.height = keyboardHeight;
+//                mEmojiLayout.setLayoutParams(mEmojiLayoutLayoutParams);
+//            }
+//        });
+//        hideSoftInput(this, mContentView);
+    }
+
+    private void delay(Runnable runnable) {
+        mContentView.postDelayed(runnable, 300);
     }
 
     private void logHeight() {
         String log = String.format("屏幕高度:%s 窗口高度:%s 状态栏高度:%s 导航栏高度:%s",
                 getScreenHeight(this), getWindowHeight(this), getStatusHeight(this), getNavigationHeight(this));
-        Log.i(TAG, "logHeight: " + log );
+        Log.i(TAG, "logHeight: " + log);
     }
 
     private void logScreen() {
