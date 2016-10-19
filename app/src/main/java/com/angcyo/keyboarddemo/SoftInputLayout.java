@@ -20,7 +20,7 @@ import android.widget.LinearLayout;
  * Version: 1.0.0
  */
 public class SoftInputLayout extends LinearLayout {
-    private static final String TAG = SoftInputLayout2.class.getSimpleName();
+    private static final String TAG = SoftInputLayout.class.getSimpleName();
 
     /**
      * 内容+键盘的实际最大允许的高度
