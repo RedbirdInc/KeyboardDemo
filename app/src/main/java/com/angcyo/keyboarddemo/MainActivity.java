@@ -6,17 +6,26 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
-import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -27,10 +36,18 @@ public class MainActivity extends AppCompatActivity {
     View mEmojiLayout;
     EditText mEditText;
 
+    RecyclerView mRecyclerView;
+
     int keyboardHeight = -1;
     int contentHeight = -1;
 
     boolean isShowKeyboard = false;
+
+    SoftInputLayout mSoftInputLayout;
+
+    ArrayList<String> mArrayList = new ArrayList<>();
+
+    int count = 0;
 
     /**
      * 屏幕高度, 包括状态栏的高度,和底部虚拟导航栏的高度
@@ -73,6 +90,11 @@ public class MainActivity extends AppCompatActivity {
                 .hideSoftInputFromWindow(editText.getWindowToken(), 0);
     }
 
+    public static String getTime() {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss:SSS");
+        return simpleDateFormat.format(new Date());
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -85,7 +107,20 @@ public class MainActivity extends AppCompatActivity {
         mActionBar = findViewById(R.id.action_bar);
         mEditText = (EditText) findViewById(R.id.edit_text);
         mEmojiLayout = findViewById(R.id.emoji_layout);
+        mSoftInputLayout = (SoftInputLayout) findViewById(R.id.softinput_layout);
+        mSoftInputLayout.setOnSoftInputChangeListener(new SoftInputLayout.OnSoftInputChangeListener() {
+            @Override
+            public void onSoftInputChange(boolean show, int layoutHeight, int contentHeight) {
+                Log.i(TAG, "onSoftInputChange: 键盘是否显示:" + show + " 布局高度:" + layoutHeight + " 内容高度:" + contentHeight);
+                if (show) {
+                    mRecyclerView.smoothScrollToPosition(mArrayList.size());
+                }
+            }
+        });
 
+        mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+        mRecyclerView.setAdapter(new MAdapter());
 
         final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -115,64 +150,25 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        mContentView.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
-            @Override
-            public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
-                contentHeight = bottom - top;
-                int height = getWindowHeight(MainActivity.this) - bottom;
-                if (height > 200) {
-                    isShowKeyboard = true;
-                    keyboardHeight = height;
-                } else {
-                    isShowKeyboard = false;
-                }
-            }
-        });
-
-    }
-
-    public void hideEmoji() {
-        LinearLayout.LayoutParams mEmojiLayoutLayoutParams = (LinearLayout.LayoutParams) mEmojiLayout.getLayoutParams();
-        mEmojiLayoutLayoutParams.weight = 0;
-        mEmojiLayout.setVisibility(View.GONE);
-
-        LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) mContentView.getLayoutParams();
-        layoutParams.height = contentHeight;
-        layoutParams.weight = 1;
-
-        mContentView.requestLayout();
+        fab.setVisibility(View.GONE);
     }
 
     public void onButton(View view) {
-        if (isShowKeyboard) {
-            hideSoftInput(this, mEditText);
-            LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) mContentView.getLayoutParams();
-            layoutParams.height = contentHeight;
-            layoutParams.weight = 0;
+    }
 
-            LinearLayout.LayoutParams mEmojiLayoutLayoutParams = (LinearLayout.LayoutParams) mEmojiLayout.getLayoutParams();
-            mEmojiLayoutLayoutParams.weight = 1;
-            mEmojiLayout.setVisibility(View.VISIBLE);
+    public void onOpen(View view) {
+        mSoftInputLayout.showEmojiLayout();
+    }
 
-            isShowKeyboard = false;
-        } else {
-            hideEmoji();
-        }
-//        mEmojiLayoutLayoutParams.height = keyboardHeight;
-//        mEmojiLayout.setLayoutParams(mEmojiLayoutLayoutParams);
+    public void onClose(View view) {
+        mSoftInputLayout.hideEmojiLayout();
+    }
 
-
-//        layoutParams.height = getWindowHeight(this) - mContentView.getTop();
-//        final int keyboardHeight = this.keyboardHeight;
-//        delay(new Runnable() {
-//            @Override
-//            public void run() {
-//                ViewGroup.LayoutParams mEmojiLayoutLayoutParams = mEmojiLayout.getLayoutParams();
-//                mEmojiLayoutLayoutParams.height = keyboardHeight;
-//                mEmojiLayout.setLayoutParams(mEmojiLayoutLayoutParams);
-//            }
-//        });
-//        hideSoftInput(this, mContentView);
+    public void onSend(View view) {
+        String string = mEditText.getText().toString();
+        mArrayList.add(TextUtils.isEmpty(string) ? "测试" + count++ : string);
+        mRecyclerView.getAdapter().notifyDataSetChanged();
+        mRecyclerView.smoothScrollToPosition(mArrayList.size());
     }
 
     private void delay(Runnable runnable) {
@@ -210,7 +206,6 @@ public class MainActivity extends AppCompatActivity {
         Log.i(TAG, "logVisible: " + out);
     }
 
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -231,5 +226,39 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (!mSoftInputLayout.handleBack()) {
+            super.onBackPressed();
+        }
+    }
+
+    public static class MViewHolder extends RecyclerView.ViewHolder {
+
+        public MViewHolder(View itemView) {
+            super(itemView);
+        }
+    }
+
+    public class MAdapter extends RecyclerView.Adapter<MViewHolder> {
+
+        @Override
+        public MViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View item = LayoutInflater.from(MainActivity.this).inflate(R.layout.item_msg_layout, parent, false);
+            return new MViewHolder(item);
+        }
+
+        @Override
+        public void onBindViewHolder(MViewHolder holder, int position) {
+            ((TextView) ((ViewGroup) holder.itemView).getChildAt(0)).setText(getTime());
+            ((TextView) ((ViewGroup) holder.itemView).getChildAt(1)).setText(mArrayList.get(position));
+        }
+
+        @Override
+        public int getItemCount() {
+            return mArrayList.size();
+        }
     }
 }
