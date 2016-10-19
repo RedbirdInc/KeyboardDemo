@@ -118,6 +118,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        mEditText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+//                mSoftInputLayout.requestShowSoftInput();
+            }
+        });
+
+
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
         mRecyclerView.setAdapter(new MAdapter());
