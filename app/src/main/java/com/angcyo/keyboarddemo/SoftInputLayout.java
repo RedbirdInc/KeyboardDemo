@@ -199,7 +199,7 @@ public class SoftInputLayout extends LinearLayout {
      * 默认的表情布局高度
      */
     private int getDefaultEmojiHeight() {
-        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 200, getResources().getDisplayMetrics());
+        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 100, getResources().getDisplayMetrics());
     }
 
     public interface OnSoftInputChangeListener {

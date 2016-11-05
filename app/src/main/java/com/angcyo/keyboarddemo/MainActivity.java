@@ -1,11 +1,17 @@
 package com.angcyo.keyboarddemo;
 
 import android.app.Activity;
+import android.app.Dialog;
+import android.graphics.Color;
 import android.graphics.Rect;
+import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.AppCompatDialogFragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -13,12 +19,14 @@ import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -243,10 +251,61 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void onDialog(View view) {
+        new DemoDialog().show(getSupportFragmentManager(), "dialog");
+    }
+
     public static class MViewHolder extends RecyclerView.ViewHolder {
 
         public MViewHolder(View itemView) {
             super(itemView);
+        }
+    }
+
+
+    /**
+     * 对话框中弹出表情
+     */
+    public static class DemoDialog extends AppCompatDialogFragment {
+
+        @Nullable
+        @Override
+        public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+            final View view = inflater.inflate(R.layout.dialog_main, (ViewGroup) getDialog().getWindow().findViewById(Window.ID_ANDROID_CONTENT), false);
+            final SoftInputLayout softLayout = (SoftInputLayout) view.findViewById(R.id.softinput_layout);
+            view.findViewById(R.id.open_button).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    softLayout.showEmojiLayout();
+                }
+            });
+            view.findViewById(R.id.close_button).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    softLayout.hideEmojiLayout();
+                }
+            });
+            view.findViewById(R.id.dialog_button).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    new DemoDialog().show(getChildFragmentManager(), "dialog");
+                }
+            });
+
+            initDialog();
+            return view;
+        }
+
+        private void initDialog() {
+            final Dialog dialog = getDialog();
+            final Window window = dialog.getWindow();
+            final WindowManager.LayoutParams attributes = window.getAttributes();
+            window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            attributes.width = -1;
+            attributes.height = -1;
+            attributes.gravity = Gravity.BOTTOM;
+            window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+            window.setAttributes(attributes);
         }
     }
 
